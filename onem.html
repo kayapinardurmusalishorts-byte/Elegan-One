@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>One M</title>
+<style>
+:root{--bg:#000;--fg:#fff;--mut:#8b90a0;--fld:#0d0f14;--bd:#232734;--btn:#f3f4f8;--btnt:#000;--err:#ff6b6b;--ok:#5bd68a;--glow:rgba(110,130,255,.16);--ease:cubic-bezier(.2,.7,.2,1);--gl:rgba(8,10,16,.4);--gl2:rgba(255,255,255,.08);--glb:rgba(255,255,255,.1);--glh:rgba(255,255,255,.06);--gls:rgba(0,0,0,.55);--sh:rgba(255,255,255,.07);color-scheme:dark}
+:root[data-theme=light]{--bg:#fff;--fg:#0b0d12;--mut:#5d6373;--fld:#f4f5f8;--bd:#d9dce5;--btn:#0b0d12;--btnt:#fff;--err:#d93636;--ok:#1f9d55;--glow:rgba(90,110,255,.13);--gl:rgba(236,239,248,.5);--gl2:rgba(255,255,255,.7);--glb:rgba(15,20,40,.1);--glh:rgba(255,255,255,.6);--gls:rgba(40,50,90,.25);--sh:rgba(255,255,255,.45);color-scheme:light}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;scrollbar-width:thin;scrollbar-color:var(--bd) transparent}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--fg);font:16px/1.4 -apple-system,"Inter","Segoe UI",Roboto,sans-serif;transition:background-color .4s,color .4s}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:2px solid var(--mut);outline-offset:2px}
+[hidden]{display:none!important}
+@keyframes drift{to{transform:translate3d(6%,4%,0) scale(1.08)}}
+@keyframes pop{from{opacity:0;transform:scale(.92)}}
+@keyframes up{from{opacity:0;transform:translateY(8px)}}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}}
+@keyframes swap{from{opacity:0;transform:translateY(8px)}}
+@keyframes fadeIn{from{opacity:0}}
+@keyframes slideL{from{opacity:0;transform:translateX(-16px)}}
+@keyframes msgL{from{opacity:0;transform:translate(-10px,6px) scale(.97)}}
+@keyframes msgR{from{opacity:0;transform:translate(10px,6px) scale(.97)}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}}
+@keyframes turn{from{opacity:0;transform:rotate(-90deg) scale(.6)}}
+@keyframes flash{30%{box-shadow:0 0 0 3px var(--mut)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes stPop{from{transform:scale(.3);opacity:0}}
+@keyframes dot{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-4px);opacity:1}}
+@keyframes typOut{to{opacity:0;transform:scale(.9)}}
+@keyframes fly{40%{transform:translate(16px,-16px);opacity:0}41%{transform:translate(-16px,16px);opacity:0}}
+.glow{position:fixed;inset:-20%;pointer-events:none;z-index:0;background:radial-gradient(40% 35% at 28% 30%,var(--glow),transparent 70%),radial-gradient(35% 30% at 76% 72%,var(--glow),transparent 70%);animation:drift 22s ease-in-out infinite alternate}
+.app{position:relative;z-index:1;display:flex;height:100dvh}
+.side{width:min(100%,400px);flex:none;display:flex;flex-direction:column;border-inline-end:1px solid var(--glb);min-height:0}
+.sh{position:relative;z-index:5;display:flex;align-items:center;justify-content:space-between;padding-block:calc(env(safe-area-inset-top,0px) + 10px) 10px;padding-inline:18px 12px;background:var(--gl);-webkit-backdrop-filter:blur(18px) saturate(190%);backdrop-filter:blur(18px) saturate(190%);border-bottom:1px solid var(--glb);box-shadow:inset 0 -1px 0 var(--glh);transition:background-color .4s,border-color .4s}
+.sh::before,.ch::before,.comp::before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,var(--sh),transparent 60%)}
+.sh h1{position:relative;margin:0;font-size:24px;letter-spacing:-.02em;animation:slideL .9s var(--ease) .1s both}
+.acts{position:relative;display:flex;gap:2px}
+.ib{width:42px;height:42px;border-radius:50%;border:0;background:none;display:grid;place-items:center;transition:background-color .25s,transform .25s var(--ease)}
+.acts .ib{animation:pop .55s cubic-bezier(.2,.8,.3,1.2) calc(var(--i,0)*60ms + 300ms) backwards}
+@media(hover:hover){.ib:hover{background:var(--gl2);transform:scale(1.06)}}
+.ib:active{transform:scale(.92)}
+.ib svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#bTheme svg{animation:turn .5s var(--ease)}
+.menu{position:absolute;inset-inline-end:12px;top:calc(env(safe-area-inset-top,0px) + 54px);min-width:180px;background:var(--fld);border:1px solid var(--bd);border-radius:16px;padding:6px;z-index:30;box-shadow:0 24px 48px -18px var(--gls);transform-origin:top right;animation:pop .2s var(--ease)}
+[dir=rtl] .menu{transform-origin:top left}
+.menu button,.cm button{animation:rise .32s var(--ease) backwards}
+.menu button:nth-child(2),.cm button:nth-child(2){animation-delay:45ms}
+.cm button:nth-child(3){animation-delay:90ms}
+.cm button:nth-child(4){animation-delay:135ms}
+.menu button{display:block;width:100%;text-align:start;padding:10px 12px;border:0;background:none;border-radius:12px;transition:background-color .2s}
+@media(hover:hover){.menu button:hover,.cm button:hover{background:var(--bd)}}
+.search{position:relative;margin:12px 14px 10px;animation:rise .7s var(--ease) .25s backwards}
+.search svg{position:absolute;inset-inline-start:14px;top:12px;width:20px;height:20px;fill:none;stroke:var(--mut);stroke-width:1.8;stroke-linecap:round;transition:stroke .25s}
+.search:focus-within svg{stroke:var(--fg)}
+.search input{width:100%;height:44px;border-radius:16px;border:1px solid var(--bd);background:var(--fld);color:var(--fg);padding:0 14px;padding-inline-start:42px;font:inherit;outline:none;transition:border-color .25s,box-shadow .25s,background-color .4s,color .4s}
+.search input:focus{border-color:var(--mut);box-shadow:inset 0 0 0 1px var(--mut)}
+.list{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:2px 8px calc(env(safe-area-inset-bottom,0px) + 8px)}
+.row{display:flex;gap:12px;align-items:center;width:100%;padding:10px;border:0;border-radius:16px;background:none;text-align:start;transition:background-color .25s,box-shadow .25s,transform .25s var(--ease)}
+.row.a{animation:rise .6s var(--ease) var(--d,0ms) backwards}
+@media(hover:hover){.row:hover{background:var(--fld)}.row:hover .av{transform:scale(1.05)}}
+.row.on{background:var(--fld);box-shadow:inset 0 0 0 1px var(--bd)}
+.row:active{transform:scale(.985)}
+.row:focus-visible{outline-offset:-2px}
+.av{flex:none;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:18px;box-shadow:inset 0 0 0 1px var(--glb);transition:transform .3s var(--ease)}
+.av svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.av.pubav{background:var(--btn);color:var(--btnt)}
+.rc{flex:1;min-width:0}
+.r1,.r2{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.r1 b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.r1 time{flex:none;font-size:12px;color:var(--mut)}
+.r2 span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--mut);font-size:14px}
+.unr .r1 time,.unr .r2 span{color:var(--fg)}
+.bd{flex:none;min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:var(--btn);color:var(--btnt);font-size:12px;font-weight:700;display:grid;place-items:center}
+.empty{margin:auto;padding:24px;color:var(--mut);font-size:14px;text-align:center}
+.main{position:relative;flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;background:transparent}
+.ph{margin:auto;padding:24px;color:var(--mut);text-align:center;animation:fadeIn 1s ease .5s backwards}
+.conv{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;animation:swap .45s var(--ease)}
+.ch{position:relative;display:flex;align-items:center;gap:10px;padding-block:calc(env(safe-area-inset-top,0px) + 8px) 8px;padding-inline:16px 12px;background:var(--gl);-webkit-backdrop-filter:blur(18px) saturate(190%);backdrop-filter:blur(18px) saturate(190%);border-bottom:1px solid var(--glb);box-shadow:inset 0 -1px 0 var(--glh);transition:background-color .4s,border-color .4s}
+.ch>*,.comp>*{position:relative}
+.ch .av{animation:pop .45s cubic-bezier(.2,.8,.3,1.2)}
+.ch .tt{flex:1;min-width:0}
+.ch b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ch small{display:block;height:17px;overflow:hidden;white-space:nowrap;color:var(--mut);font-size:13px}
+.bk{display:none}
+.msgs{position:relative;flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:2px;padding:12px 14px}
+.day{align-self:center;margin:10px 0 6px;padding:4px 12px;border-radius:12px;border:1px solid var(--bd);background:var(--fld);font-size:12px;color:var(--mut)}
+.m{position:relative;max-width:min(80%,520px);padding:6px 10px 5px;border-radius:18px;border-end-start-radius:6px;border:1px solid var(--bd);background:var(--fld);align-self:flex-start;word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:pan-y;transition:background-color .4s,color .4s,border-color .4s,scale .2s var(--ease)}
+.m.pr{scale:.97}
+.m.a{animation:msgL .45s cubic-bezier(.2,.8,.3,1.15) var(--d,0ms) backwards}
+.m.me{align-self:flex-end;background:var(--btn);color:var(--btnt);border-color:transparent;border-end-start-radius:18px;border-end-end-radius:6px}
+.m.me.a{animation-name:msgR}
+.m::before{content:"";position:absolute;inset-inline-start:-34px;top:50%;width:22px;height:22px;margin-top:-11px;background:var(--mut);opacity:var(--p,0);scale:calc(.5 + var(--p,0)*.5);pointer-events:none;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6 4 11l5 5M4 11h9a7 7 0 0 1 7 7v1'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6 4 11l5 5M4 11h9a7 7 0 0 1 7 7v1'/%3E%3C/svg%3E") center/contain no-repeat}
+.m.typ::before{display:none}
+.m.typ{display:flex;align-items:center;gap:4px;width:max-content;padding:12px 14px;white-space:normal}
+.m.typ.in{animation:msgL .4s cubic-bezier(.2,.8,.3,1.15) backwards}
+.m.typ.out{animation:typOut .2s ease forwards}
+.m.typ span{width:7px;height:7px;border-radius:50%;background:var(--mut);animation:dot 1.2s ease-in-out infinite}
+.m.typ span:nth-child(2){animation-delay:.15s}
+.m.typ span:nth-child(3){animation-delay:.3s}
+.st{display:inline-grid;place-items:center;flex:none;width:13px;height:13px;border-radius:50%;font-style:normal;font-size:8px;font-weight:700;line-height:1}
+.st.p{border:1.5px solid currentColor;border-top-color:transparent;animation:spin .8s linear infinite}
+.st.s{border:1.5px solid currentColor}
+.st.d{background:currentColor}
+.st.r{color:#fff;box-shadow:0 0 0 1.5px rgba(127,127,127,.3)}
+.st.pop,.bd.bump{animation:stPop .45s cubic-bezier(.2,.8,.3,1.4)}
+.ch small.sw{animation:swap .35s var(--ease)}
+.sd.fly svg{animation:fly .5s var(--ease)}
+::view-transition-old(root),::view-transition-new(root){animation-duration:.45s}
+.m.fl{animation:flash 1.2s ease}
+.m .who{display:block;font-size:13px;font-weight:600;margin-bottom:1px}
+.m .rq{white-space:normal;margin-bottom:4px;padding:4px 8px;border-radius:10px;border-inline-start:3px solid var(--mut);background:rgba(127,127,127,.18);font-size:13px;cursor:pointer}
+.rq b{display:block;font-size:12px}
+.rq span{display:block;opacity:.8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.m .mt{float:right;display:inline-flex;align-items:center;gap:3px;margin:6px 0 -3px 12px;font-size:11px;line-height:1;opacity:.7}
+[dir=rtl] .m .mt{float:left;margin:6px 12px -3px 0}
+.m .dl{opacity:.65;font-style:italic}
+.tk{width:16px;height:11px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tk.rd{stroke:#2f9bff}
+.tob{position:absolute;inset-inline-end:14px;bottom:calc(env(safe-area-inset-bottom,0px) + 74px);width:42px;height:42px;border-radius:50%;border:1px solid var(--bd);background:var(--fld);display:grid;place-items:center;z-index:3;animation:pop .25s var(--ease);transition:transform .25s var(--ease),border-color .25s}
+@media(hover:hover){.tob:hover{transform:translateY(-2px);border-color:var(--mut)}}
+.tob:active{transform:scale(.92)}
+.tob svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tob i{position:absolute;top:-8px;inset-inline-end:-4px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:var(--btn);color:var(--btnt);font-family:inherit;font-size:12px;font-weight:700;line-height:20px;text-align:center;font-style:normal}
+.rbar{display:flex;align-items:center;gap:6px;padding:8px 12px;border-top:1px solid var(--bd);background:var(--fld);animation:up .25s var(--ease)}
+.rbar .rq{flex:1;min-width:0;margin:0;cursor:default}
+.comp{position:relative;display:flex;align-items:flex-end;gap:8px;padding:8px 10px calc(env(safe-area-inset-bottom,0px) + 8px);border-top:1px solid var(--glb);background:var(--gl);-webkit-backdrop-filter:blur(18px) saturate(190%);backdrop-filter:blur(18px) saturate(190%);box-shadow:inset 0 1px 0 var(--glh);transition:background-color .4s,border-color .4s}
+.comp textarea{flex:1;min-width:0;height:44px;max-height:140px;resize:none;border-radius:22px;border:1px solid var(--bd);background:var(--fld);color:var(--fg);padding:11px 16px;font:inherit;line-height:1.3;outline:none;transition:border-color .25s,box-shadow .25s,background-color .4s,color .4s}
+.comp textarea:focus{border-color:var(--mut);box-shadow:inset 0 0 0 1px var(--mut)}
+.sd{flex:none;width:44px;height:44px;border-radius:50%;border:0;background:var(--btn);color:var(--btnt);display:grid;place-items:center;transition:transform .25s var(--ease),box-shadow .3s,opacity .3s,background-color .4s,color .4s}
+@media(hover:hover){.sd:hover{transform:translateY(-2px);box-shadow:0 10px 22px -10px var(--fg)}.sd:hover svg{transform:translate(1px,-1px)}}
+.sd:active{transform:scale(.9);box-shadow:none}
+.sd svg{width:20px;height:20px;fill:currentColor;transition:transform .3s var(--ease)}
+.comp:has(textarea:placeholder-shown) .sd{opacity:.55}
+[dir=rtl] .sd svg,[dir=rtl] .bk svg{scale:-1 1}
+.cm{position:fixed;z-index:40;min-width:190px;background:var(--fld);border:1px solid var(--bd);border-radius:16px;padding:6px;box-shadow:0 24px 48px -18px var(--gls);transform-origin:top left;animation:pop .18s var(--ease)}
+.cm button{display:block;width:100%;text-align:start;padding:10px 12px;border:0;background:none;border-radius:12px;transition:background-color .2s}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 90px);transform:translateX(-50%);z-index:50;max-width:88vw;padding:10px 16px;border-radius:16px;background:var(--btn);color:var(--btnt);font-size:14px;text-align:center;box-shadow:0 14px 30px -14px var(--gls);animation:toastIn .35s var(--ease)}
+@media(max-width:800px){
+ .side{width:100%;border:0;transition:transform .38s var(--ease),opacity .38s var(--ease)}
+ .app.open .side{transform:translateX(-14%);opacity:.45}
+ [dir=rtl] .app.open .side{transform:translateX(14%)}
+ .main{position:fixed;inset:0;z-index:10;background:radial-gradient(60% 40% at 25% 20%,var(--glow),transparent 70%),radial-gradient(50% 35% at 80% 85%,var(--glow),transparent 70%),var(--bg);transform:translateX(100%);transition:transform .38s var(--ease)}
+ [dir=rtl] .main{transform:translateX(-100%)}
+ .app.open .main{transform:none}
+ .bk{display:grid}
+ .ch{padding-inline-start:6px}
+ .ph{display:none}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+.ch .av,.ch .tt{cursor:pointer}
+.sheet{position:fixed;inset:0;z-index:60;display:grid;place-items:center;background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);animation:fadeIn .2s ease}
+.shb{width:min(92vw,440px);max-height:82dvh;display:flex;flex-direction:column;background:var(--fld);border:1px solid var(--bd);border-radius:24px;overflow:hidden;animation:pop .28s var(--ease)}
+.shh{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 8px 6px 20px}
+.shh b{font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shc{overflow-y:auto;padding:4px 16px calc(env(safe-area-inset-bottom,0px) + 16px)}
+.pf{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 0 14px;text-align:center}
+.pf span{color:var(--mut);font-size:14px}
+.av.big{width:84px;height:84px;font-size:32px;margin-bottom:6px}
+.av.sm{width:40px;height:40px;font-size:16px}
+.act{display:flex;align-items:center;gap:12px;width:100%;padding:11px 12px;border:0;border-radius:14px;background:none;text-align:start;transition:background-color .2s}
+.act svg{width:22px;height:22px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.act .rc{min-width:0}
+.act .rc b{display:block}
+.act .rc span{display:block;color:var(--mut);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.act.dng{color:var(--err)}
+@media(hover:hover){.act:hover{background:var(--bd)}}
+.field{display:flex;gap:8px;margin:8px 0}
+.fi{flex:1;min-width:0;height:44px;border-radius:14px;border:1px solid var(--bd);background:var(--bg);color:var(--fg);padding:0 14px;font:inherit;outline:none;transition:border-color .25s}
+.fi.full{display:block;width:100%;flex:none;margin:6px 0}
+.fi:focus{border-color:var(--mut)}
+.pb{flex:none;height:44px;padding:0 18px;border:0;border-radius:14px;background:var(--btn);color:var(--btnt);font-weight:700;transition:transform .2s var(--ease)}
+.pb.wide{width:100%;margin-top:10px}
+.pb:active{transform:scale(.97)}
+.mini{flex:none;padding:6px 12px;border-radius:10px;border:1px solid var(--bd);background:none;font-size:13px;color:var(--err)}
+.mr{display:flex;align-items:center;gap:12px;padding:8px 4px;cursor:pointer}
+.mr .rc{flex:1;min-width:0}
+.mr .rc b{display:block}
+.mr .rc span{display:block;color:var(--mut);font-size:13px;overflow:hidden;text-overflow:ellipsis}
+.tag{flex:none;padding:2px 8px;border-radius:8px;background:var(--bd);font-size:12px;font-style:normal}
+.sec2{margin:12px 4px 4px;color:var(--mut);font-size:13px}
+.chips{display:flex;flex-wrap:wrap;margin:4px -3px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:6px 8px 6px 12px;border-radius:999px;background:var(--bd);margin:3px;font-size:14px}
+.chip button{border:0;background:none;color:var(--mut);padding:0 2px}
+.chip.big{margin:0 0 8px}
+.cc{display:flex;align-items:center;gap:10px;min-width:200px;padding:4px 0}
+.cc .av{width:40px;height:40px;font-size:16px;box-shadow:none}
+.cc b{display:block}
+.cc span{display:block;font-size:13px;opacity:.75;overflow:hidden;text-overflow:ellipsis}
+.ccb{display:block;width:100%;margin-top:6px;padding:8px;border:0;border-top:1px solid rgba(127,127,127,.3);background:none;font-weight:600}
+.blkbar{justify-content:space-between;gap:10px;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 10px)}
+.blkbar span{font-size:14px;color:var(--mut)}
+@keyframes sheetUp{from{transform:translateY(40px);opacity:0}}
+@media(max-width:800px){.sheet{place-items:end center}.shb{width:100%;border-radius:24px 24px 0 0;animation:sheetUp .32s var(--ease)}}
+</style>
+</head>
+<body>
+<div class="glow" aria-hidden="true"></div>
+<div class="app" id="app">
+  <aside class="side">
+    <div class="sh">
+      <h1>One M</h1>
+      <div class="acts">
+        <button class="ib" id="bNew" type="button" data-ta="new" style="--i:0"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+        <button class="ib" id="bTheme" type="button" aria-label="Theme" style="--i:1"></button>
+        <button class="ib" id="bMenu" type="button" aria-label="Menu" style="--i:2"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="19" r="1.2"/></svg></button>
+      </div>
+      <div class="menu" id="menu" hidden><button type="button" id="mGroup" data-t="newGroup"></button><button type="button" id="mBlocked" data-t="blockedL"></button><button type="button" id="mAcct" data-t="acct"></button><button type="button" id="mOut" data-t="out"></button></div>
+    </div>
+    <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="q" type="text" autocomplete="off" data-tp="search"></div>
+    <div class="list" id="list"></div>
+  </aside>
+  <section class="main" id="main">
+    <div class="ph" id="ph" data-t="pick"></div>
+    <div class="conv" id="conv" hidden>
+      <div class="ch">
+        <button class="ib bk" id="bBack" type="button" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <div class="av" id="hav"></div>
+        <div class="tt"><b id="hnm"></b><small id="hst"></small></div>
+      </div>
+      <div class="msgs" id="msgs"></div>
+      <button class="tob" id="tob" type="button" hidden aria-label="Down"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><i id="tobN"></i></button>
+      <div class="rbar" id="rbar" hidden></div>
+      <div class="rbar blkbar" id="blkbar" hidden><span id="blkTxt"></span><button class="pb" id="blkBtn" type="button"></button></div>
+      <form class="comp" id="comp">
+        <button class="ib att" id="bAtt" type="button" data-ta="shareContact"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="11" r="2"/><path d="M6 16c.6-1.6 1.8-2.2 3-2.2s2.4.6 3 2.2M14 10h4M14 13h3"/></svg></button>
+        <textarea id="ta" rows="1" maxlength="2000" data-tp="tmsg"></textarea>
+        <button class="sd" type="submit" aria-label="Send"><svg viewBox="0 0 24 24"><path d="M3 11.2 20.6 3.4c.7-.3 1.4.4 1.1 1.1L13.9 21.1c-.3.7-1.3.7-1.6 0l-2.3-6.4-6.4-2.3c-.7-.3-.7-1.2 0-1.2z"/></svg></button>
+      </form>
+    </div>
+  </section>
+</div>
+<div class="cm" id="cm" hidden></div>
+<div class="toast" id="toast" hidden></div>
+<div class="sheet" id="sheet" hidden><div class="shb"><div class="shh"><b id="sht"></b><button class="ib" id="shx" type="button" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div><div class="shc" id="shc"></div></div></div>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import {getAuth,onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+import {getFirestore,doc,setDoc,getDoc,updateDoc,addDoc,deleteDoc,collection,query,orderBy,limit,onSnapshot,writeBatch,increment,serverTimestamp,arrayUnion,arrayRemove,deleteField,Timestamp} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+const app=initializeApp({apiKey:"AIzaSyBLpM7If5-y1UJqkrtPzI4Ie_5kNEpMem0",authDomain:"elegan-one.firebaseapp.com",projectId:"elegan-one",storageBucket:"elegan-one.firebasestorage.app",messagingSenderId:"338807229720",appId:"1:338807229720:web:2c53e96342176983e3626d"});
+const auth=getAuth(app),db=getFirestore(app);
+
+const K="chats,search,new,typing,online,seen,today,yest,reply,copy,delMe,delAll,deleted,you,nf,self,err,empty,nomsg,pick,copied,badEm,acct,out,pub,tmsg,start,weekly,newGroup,grpName,memEmail,members,create,owner,leave,remove,block,unblock,blockedL,noBlocked,youBlocked,share,shareContact,shareTo,shared,groupMade,added,grpMin,grpMax,already,sendFail".split(",");
+const T={
+tr:["Sohbetler","Ara veya e-posta yaz","Yeni sohbet","yazıyor…","çevrimiçi","son görülme","Bugün","Dün","Yanıtla","Kopyala","Benden sil","Herkesten sil","Bu mesaj silindi","Sen","Bu e-postayla kayıtlı kullanıcı bulunamadı","Kendinle sohbet başlatamazsın","Bağlantı sorunu. Firestore'u ve kuralları kontrol et","Henüz sohbet yok. Bir e-posta adresi yazarak başla.","Henüz mesaj yok","Mesajlaşmak için bir sohbet seç","Kopyalandı","Geçerli bir e-posta adresi gir","Hesabım","Çıkış Yap","Giriş yapan herkes yazabilir","Mesaj yaz","Sohbet başlat","Her pazartesi sıfırlanır","Yeni grup","Grup adı","E-posta ile üye ekle","Üyeler","Oluştur","Yönetici","Gruptan çık","Çıkar","Engelle","Engeli kaldır","Engellenenler","Engellenen kimse yok","Bu kişiyi engelledin. Mesaj yazmak için engeli kaldır.","Paylaş","Kişi paylaş","Kime gönderilsin?","Kişi paylaşıldı","Grup oluşturuldu","Üye eklendi","Grup için en az bir üye ekle","Bir grupta en fazla 15 kişi olabilir","Zaten grupta","Mesaj gönderilemedi"],
+en:["Chats","Search or type an email","New chat","typing…","online","last seen","Today","Yesterday","Reply","Copy","Delete for me","Delete for everyone","This message was deleted","You","No user found with this email","You can't start a chat with yourself","Connection problem. Check Firestore and its rules","No chats yet. Type an email address to start.","No messages yet","Select a chat to start messaging","Copied","Enter a valid email address","My account","Sign Out","Anyone signed in can write","Type a message","Start chat","Resets every Monday","New group","Group name","Add member by email","Members","Create","Admin","Leave group","Remove","Block","Unblock","Blocked","No blocked contacts","You blocked this contact. Unblock to send messages.","Share","Share contact","Send to whom?","Contact shared","Group created","Member added","Add at least one member","A group can have up to 15 people","Already in the group","Message couldn't be sent"],
+de:["Chats","Suchen oder E-Mail eingeben","Neuer Chat","schreibt…","online","zuletzt online","Heute","Gestern","Antworten","Kopieren","Für mich löschen","Für alle löschen","Diese Nachricht wurde gelöscht","Du","Kein Nutzer mit dieser E-Mail gefunden","Du kannst keinen Chat mit dir selbst starten","Verbindungsproblem. Prüfe Firestore und die Regeln","Noch keine Chats. Gib eine E-Mail-Adresse ein.","Noch keine Nachrichten","Wähle einen Chat zum Schreiben","Kopiert","Gib eine gültige E-Mail ein","Mein Konto","Abmelden","Jeder Angemeldete kann schreiben","Nachricht schreiben","Chat starten","Wird jeden Montag zurückgesetzt","Neue Gruppe","Gruppenname","Mitglied per E-Mail hinzufügen","Mitglieder","Erstellen","Admin","Gruppe verlassen","Entfernen","Blockieren","Blockierung aufheben","Blockiert","Keine blockierten Kontakte","Du hast diesen Kontakt blockiert. Hebe die Blockierung auf, um zu schreiben.","Teilen","Kontakt teilen","An wen senden?","Kontakt geteilt","Gruppe erstellt","Mitglied hinzugefügt","Füge mindestens ein Mitglied hinzu","Eine Gruppe kann bis zu 15 Personen haben","Bereits in der Gruppe","Nachricht konnte nicht gesendet werden"],
+fr:["Discussions","Rechercher ou saisir un e-mail","Nouvelle discussion","écrit…","en ligne","vu pour la dernière fois","Aujourd'hui","Hier","Répondre","Copier","Supprimer pour moi","Supprimer pour tous","Ce message a été supprimé","Toi","Aucun utilisateur avec cet e-mail","Tu ne peux pas discuter avec toi-même","Problème de connexion. Vérifie Firestore et ses règles","Aucune discussion. Saisis une adresse e-mail pour commencer.","Aucun message","Choisis une discussion pour écrire","Copié","Saisis un e-mail valide","Mon compte","Se déconnecter","Tout utilisateur connecté peut écrire","Écrire un message","Démarrer","Réinitialisé chaque lundi","Nouveau groupe","Nom du groupe","Ajouter un membre par e-mail","Membres","Créer","Admin","Quitter le groupe","Retirer","Bloquer","Débloquer","Bloqués","Aucun contact bloqué","Tu as bloqué ce contact. Débloque-le pour écrire.","Partager","Partager un contact","À qui l'envoyer ?","Contact partagé","Groupe créé","Membre ajouté","Ajoute au moins un membre","Un groupe peut avoir 15 personnes maximum","Déjà dans le groupe","Le message n'a pas pu être envoyé"],
+es:["Chats","Buscar o escribir un correo","Nuevo chat","escribiendo…","en línea","últ. vez","Hoy","Ayer","Responder","Copiar","Eliminar para mí","Eliminar para todos","Este mensaje se eliminó","Tú","No se encontró ningún usuario con este correo","No puedes chatear contigo mismo","Problema de conexión. Revisa Firestore y sus reglas","Aún no hay chats. Escribe un correo para empezar.","Aún no hay mensajes","Elige un chat para escribir","Copiado","Escribe un correo válido","Mi cuenta","Cerrar sesión","Cualquier usuario conectado puede escribir","Escribe un mensaje","Iniciar chat","Se reinicia cada lunes","Nuevo grupo","Nombre del grupo","Añadir miembro por correo","Miembros","Crear","Admin","Salir del grupo","Quitar","Bloquear","Desbloquear","Bloqueados","Sin contactos bloqueados","Bloqueaste este contacto. Desbloquéalo para escribir.","Compartir","Compartir contacto","¿A quién enviar?","Contacto compartido","Grupo creado","Miembro añadido","Añade al menos un miembro","Un grupo puede tener hasta 15 personas","Ya está en el grupo","No se pudo enviar el mensaje"],
+it:["Chat","Cerca o scrivi un'e-mail","Nuova chat","sta scrivendo…","online","ultimo accesso","Oggi","Ieri","Rispondi","Copia","Elimina per me","Elimina per tutti","Questo messaggio è stato eliminato","Tu","Nessun utente trovato con questa e-mail","Non puoi chattare con te stesso","Problema di connessione. Controlla Firestore e le regole","Nessuna chat. Scrivi un indirizzo e-mail per iniziare.","Nessun messaggio","Scegli una chat per scrivere","Copiato","Inserisci un'e-mail valida","Il mio account","Esci","Chiunque sia connesso può scrivere","Scrivi un messaggio","Avvia chat","Si azzera ogni lunedì","Nuovo gruppo","Nome del gruppo","Aggiungi membro via e-mail","Membri","Crea","Admin","Esci dal gruppo","Rimuovi","Blocca","Sblocca","Bloccati","Nessun contatto bloccato","Hai bloccato questo contatto. Sbloccalo per scrivere.","Condividi","Condividi contatto","A chi inviare?","Contatto condiviso","Gruppo creato","Membro aggiunto","Aggiungi almeno un membro","Un gruppo può avere fino a 15 persone","Già nel gruppo","Impossibile inviare il messaggio"],
+pt:["Conversas","Pesquisar ou digitar um e-mail","Nova conversa","digitando…","online","visto por último","Hoje","Ontem","Responder","Copiar","Apagar para mim","Apagar para todos","Esta mensagem foi apagada","Você","Nenhum usuário encontrado com este e-mail","Você não pode conversar consigo mesmo","Problema de conexão. Verifique o Firestore e as regras","Nenhuma conversa. Digite um e-mail para começar.","Nenhuma mensagem ainda","Escolha uma conversa para escrever","Copiado","Digite um e-mail válido","Minha conta","Sair","Qualquer usuário conectado pode escrever","Digite uma mensagem","Iniciar conversa","Reinicia toda segunda","Novo grupo","Nome do grupo","Adicionar membro por e-mail","Membros","Criar","Admin","Sair do grupo","Remover","Bloquear","Desbloquear","Bloqueados","Nenhum contato bloqueado","Você bloqueou este contato. Desbloqueie para enviar mensagens.","Compartilhar","Compartilhar contato","Para quem enviar?","Contato compartilhado","Grupo criado","Membro adicionado","Adicione pelo menos um membro","Um grupo pode ter até 15 pessoas","Já está no grupo","Não foi possível enviar a mensagem"],
+ru:["Чаты","Поиск или введите почту","Новый чат","печатает…","в сети","был(а)","Сегодня","Вчера","Ответить","Копировать","Удалить для меня","Удалить для всех","Сообщение удалено","Вы","Пользователь с такой почтой не найден","Нельзя начать чат с самим собой","Проблема соединения. Проверьте Firestore и правила","Чатов пока нет. Введите почту, чтобы начать.","Сообщений пока нет","Выберите чат, чтобы писать","Скопировано","Введите корректную почту","Мой аккаунт","Выйти","Писать может любой вошедший пользователь","Введите сообщение","Начать чат","Сбрасывается каждый понедельник","Новая группа","Название группы","Добавить участника по почте","Участники","Создать","Админ","Покинуть группу","Удалить","Заблокировать","Разблокировать","Заблокированные","Нет заблокированных","Вы заблокировали контакт. Разблокируйте, чтобы писать.","Поделиться","Поделиться контактом","Кому отправить?","Контакт отправлен","Группа создана","Участник добавлен","Добавьте хотя бы одного участника","В группе может быть до 15 человек","Уже в группе","Не удалось отправить сообщение"],
+ar:["المحادثات","ابحث أو اكتب بريداً","محادثة جديدة","يكتب…","متصل","آخر ظهور","اليوم","أمس","رد","نسخ","حذف لدي","حذف للجميع","تم حذف هذه الرسالة","أنت","لم يتم العثور على مستخدم بهذا البريد","لا يمكنك بدء محادثة مع نفسك","مشكلة في الاتصال. تحقق من Firestore وقواعده","لا توجد محادثات. اكتب بريداً إلكترونياً للبدء.","لا توجد رسائل بعد","اختر محادثة لبدء المراسلة","تم النسخ","أدخل بريداً إلكترونياً صالحاً","حسابي","تسجيل الخروج","يمكن لأي مستخدم مسجّل الدخول الكتابة","اكتب رسالة","بدء محادثة","يُعاد ضبطه كل اثنين","مجموعة جديدة","اسم المجموعة","أضف عضواً بالبريد","الأعضاء","إنشاء","مشرف","مغادرة المجموعة","إزالة","حظر","إلغاء الحظر","المحظورون","لا يوجد محظورون","لقد حظرت جهة الاتصال هذه. ألغِ الحظر للمراسلة.","مشاركة","مشاركة جهة اتصال","لمن تريد الإرسال؟","تمت مشاركة جهة الاتصال","تم إنشاء المجموعة","تمت إضافة العضو","أضف عضواً واحداً على الأقل","يمكن أن تضم المجموعة حتى 15 شخصاً","موجود بالفعل في المجموعة","تعذّر إرسال الرسالة"],
+ja:["チャット","検索またはメールを入力","新しいチャット","入力中…","オンライン","最終ログイン","今日","昨日","返信","コピー","自分用に削除","全員用に削除","このメッセージは削除されました","あなた","このメールのユーザーが見つかりません","自分とはチャットできません","接続の問題です。Firestoreとルールを確認してください","チャットはまだありません。メールアドレスを入力して開始。","メッセージはまだありません","チャットを選んでメッセージを送信","コピーしました","有効なメールアドレスを入力してください","マイアカウント","ログアウト","ログインしていれば誰でも書き込めます","メッセージを入力","チャットを開始","毎週月曜にリセット","新しいグループ","グループ名","メールでメンバーを追加","メンバー","作成","管理者","グループを退出","削除","ブロック","ブロック解除","ブロック中","ブロックした連絡先はありません","この連絡先をブロックしています。解除すると送信できます。","共有","連絡先を共有","送信先を選択","連絡先を共有しました","グループを作成しました","メンバーを追加しました","メンバーを1人以上追加してください","グループは最大15人です","すでにグループにいます","メッセージを送信できませんでした"],
+ko:["채팅","검색 또는 이메일 입력","새 채팅","입력 중…","온라인","마지막 접속","오늘","어제","답장","복사","나에게서 삭제","모두에게서 삭제","삭제된 메시지입니다","나","이 이메일의 사용자를 찾을 수 없습니다","자기 자신과는 채팅할 수 없습니다","연결 문제입니다. Firestore와 규칙을 확인하세요","채팅이 없습니다. 이메일 주소를 입력해 시작하세요.","메시지가 없습니다","채팅을 선택해 메시지를 보내세요","복사됨","올바른 이메일을 입력하세요","내 계정","로그아웃","로그인한 누구나 글을 쓸 수 있습니다","메시지 입력","채팅 시작","매주 월요일 초기화","새 그룹","그룹 이름","이메일로 멤버 추가","멤버","만들기","관리자","그룹 나가기","제거","차단","차단 해제","차단 목록","차단한 사람이 없습니다","이 연락처를 차단했습니다. 차단을 해제해야 메시지를 보낼 수 있습니다.","공유","연락처 공유","누구에게 보낼까요?","연락처를 공유했습니다","그룹이 만들어졌습니다","멤버가 추가되었습니다","멤버를 한 명 이상 추가하세요","그룹은 최대 15명까지 가능합니다","이미 그룹에 있습니다","메시지를 보내지 못했습니다"],
+zh:["聊天","搜索或输入邮箱","新聊天","正在输入…","在线","最后上线","今天","昨天","回复","复制","为我删除","为所有人删除","此消息已删除","你","未找到使用该邮箱的用户","不能和自己聊天","连接问题。请检查Firestore及其规则","还没有聊天。输入邮箱地址开始。","还没有消息","选择一个聊天开始发消息","已复制","请输入有效的邮箱","我的账号","退出登录","任何已登录用户都可以发言","输入消息","开始聊天","每周一重置","新建群组","群组名称","通过邮箱添加成员","成员","创建","管理员","退出群组","移除","屏蔽","取消屏蔽","已屏蔽","没有已屏蔽的联系人","你已屏蔽此联系人。解除屏蔽后才能发送消息。","分享","分享联系人","发送给谁？","已分享联系人","群组已创建","已添加成员","请至少添加一名成员","群组最多15人","已在群组中","消息发送失败"],
+nl:["Chats","Zoek of typ een e-mail","Nieuwe chat","typt…","online","laatst gezien","Vandaag","Gisteren","Beantwoorden","Kopiëren","Verwijderen voor mij","Verwijderen voor iedereen","Dit bericht is verwijderd","Jij","Geen gebruiker gevonden met dit e-mailadres","Je kunt geen chat met jezelf starten","Verbindingsprobleem. Controleer Firestore en de regels","Nog geen chats. Typ een e-mailadres om te beginnen.","Nog geen berichten","Kies een chat om te berichten","Gekopieerd","Voer een geldig e-mailadres in","Mijn account","Uitloggen","Iedereen die is ingelogd kan schrijven","Typ een bericht","Chat starten","Wordt elke maandag gereset","Nieuwe groep","Groepsnaam","Lid toevoegen via e-mail","Leden","Maken","Beheerder","Groep verlaten","Verwijderen","Blokkeren","Deblokkeren","Geblokkeerd","Geen geblokkeerde contacten","Je hebt dit contact geblokkeerd. Deblokkeer om te berichten.","Delen","Contact delen","Naar wie versturen?","Contact gedeeld","Groep gemaakt","Lid toegevoegd","Voeg minstens één lid toe","Een groep kan maximaal 15 personen hebben","Zit al in de groep","Bericht kon niet worden verzonden"],
+pl:["Czaty","Szukaj lub wpisz e-mail","Nowy czat","pisze…","online","ostatnio widziano","Dzisiaj","Wczoraj","Odpowiedz","Kopiuj","Usuń u mnie","Usuń u wszystkich","Ta wiadomość została usunięta","Ty","Nie znaleziono użytkownika z tym e-mailem","Nie możesz rozpocząć czatu ze sobą","Problem z połączeniem. Sprawdź Firestore i reguły","Brak czatów. Wpisz adres e-mail, aby zacząć.","Brak wiadomości","Wybierz czat, aby pisać","Skopiowano","Wpisz poprawny e-mail","Moje konto","Wyloguj się","Każdy zalogowany może pisać","Napisz wiadomość","Rozpocznij czat","Resetuje się w każdy poniedziałek","Nowa grupa","Nazwa grupy","Dodaj członka przez e-mail","Członkowie","Utwórz","Admin","Opuść grupę","Usuń","Zablokuj","Odblokuj","Zablokowani","Brak zablokowanych","Zablokowałeś ten kontakt. Odblokuj, aby pisać.","Udostępnij","Udostępnij kontakt","Do kogo wysłać?","Kontakt udostępniony","Grupa utworzona","Dodano członka","Dodaj co najmniej jednego członka","Grupa może mieć maksymalnie 15 osób","Już w grupie","Nie udało się wysłać wiadomości"],
+hi:["चैट","खोजें या ईमेल लिखें","नई चैट","लिख रहे हैं…","ऑनलाइन","आखिरी बार देखा","आज","कल","जवाब दें","कॉपी करें","मेरे लिए हटाएँ","सबके लिए हटाएँ","यह संदेश हटा दिया गया","आप","इस ईमेल का कोई उपयोगकर्ता नहीं मिला","आप खुद से चैट शुरू नहीं कर सकते","कनेक्शन की समस्या। Firestore और नियम जाँचें","अभी कोई चैट नहीं। शुरू करने के लिए ईमेल पता लिखें।","अभी कोई संदेश नहीं","संदेश भेजने के लिए चैट चुनें","कॉपी हुआ","सही ईमेल दर्ज करें","मेरा खाता","साइन आउट","साइन इन किया हुआ कोई भी लिख सकता है","संदेश लिखें","चैट शुरू करें","हर सोमवार रीसेट होता है","नया समूह","समूह का नाम","ईमेल से सदस्य जोड़ें","सदस्य","बनाएँ","एडमिन","समूह छोड़ें","हटाएँ","ब्लॉक करें","अनब्लॉक करें","ब्लॉक किए गए","कोई ब्लॉक नहीं","आपने इस संपर्क को ब्लॉक किया है। संदेश भेजने के लिए अनब्लॉक करें।","साझा करें","संपर्क साझा करें","किसे भेजें?","संपर्क साझा किया गया","समूह बन गया","सदस्य जोड़ा गया","कम से कम एक सदस्य जोड़ें","एक समूह में अधिकतम 15 लोग हो सकते हैं","पहले से समूह में है","संदेश नहीं भेजा जा सका"]
+};
+const $=id=>document.getElementById(id);
+const store={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+const EM=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function pickLang(){
+  const s=store.get("lang");if(s&&T[s])return s;
+  try{for(const l of navigator.languages||[navigator.language]){const c=(l||"").slice(0,2).toLowerCase();if(T[c])return c}}catch(e){}
+  return "tr";
+}
+function pickTheme(){
+  const s=store.get("theme");if(s)return s;
+  try{if(matchMedia("(prefers-color-scheme: light)").matches)return "light"}catch(e){}
+  return "dark";
+}
+let lang=pickLang();
+const t=k=>T[lang][K.indexOf(k)];
+const SUN='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+const MOON='<svg viewBox="0 0 24 24"><path d="M21 14.5A9 9 0 0 1 9.5 3 9 9 0 1 0 21 14.5z"/></svg>';
+const PEOPLE='<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 4.7a3.5 3.5 0 0 1 0 6.6M18 14.3c2.2.7 3.5 2.6 3.5 5.7"/></svg>';
+const TK1='<svg class="tk" viewBox="0 0 16 11"><path d="M1.5 6.2 5 9.7 12 2"/></svg>';
+const TK2='<svg class="tk{c}" viewBox="0 0 16 11"><path d="M1.5 6.2 5 9.7 11 2M6.5 8.7l1.2 1L14.5 2"/></svg>';
+const CLK='<svg class="tk" viewBox="0 0 16 11"><circle cx="8" cy="5.5" r="4"/><path d="M8 3.5v2.2l1.4.8"/></svg>';
+
+function applyLang(){
+  document.documentElement.lang=lang;document.documentElement.dir=lang==="ar"?"rtl":"ltr";
+  document.querySelectorAll("[data-t]").forEach(e=>e.textContent=t(e.dataset.t));
+  document.querySelectorAll("[data-tp]").forEach(e=>e.placeholder=t(e.dataset.tp));
+  document.querySelectorAll("[data-ta]").forEach(e=>{e.title=t(e.dataset.ta);e.setAttribute("aria-label",t(e.dataset.ta))});
+}
+function setTheme(x){document.documentElement.dataset.theme=x;$("bTheme").innerHTML=x==="dark"?SUN:MOON}
+
+// ---- zaman biçimleri
+const day0=ms=>{const d=new Date(ms);d.setHours(0,0,0,0);return d.getTime()};
+const hhmm=ms=>new Date(ms).toLocaleTimeString(lang,{hour:"2-digit",minute:"2-digit"});
+const isToday=ms=>day0(ms)===day0(Date.now());
+const isYest=ms=>day0(ms)===day0(Date.now())-864e5;
+const dateLong=ms=>new Date(ms).toLocaleDateString(lang,{day:"numeric",month:"long",year:"numeric"});
+const dateShort=ms=>new Date(ms).toLocaleDateString(lang,{day:"2-digit",month:"2-digit",year:"2-digit"});
+const dayLabel=ms=>isToday(ms)?t("today"):isYest(ms)?t("yest"):dateLong(ms);
+const listTime=ms=>isToday(ms)?hhmm(ms):isYest(ms)?t("yest"):dateShort(ms);
+const ms=ts=>ts&&ts.toMillis?ts.toMillis():0;
+function avColor(s){let h=0;for(const c of String(s||"?"))h=(h*31+c.charCodeAt(0))%360;return `hsl(${h} 42% 40%)`}
+const initial=n=>esc(((String(n||"?").trim()[0])||"?").toUpperCase());
+
+// ---- durum
+let me=null,inited=false,chats=[],pubRows=[],rows=[],meta={},peerDoc=null,cur=null;
+let replyTo=null,stick=true,newCnt=0,prevLen=0,pubReadAt=+store.get("pubRead")||0;
+// giriş animasyonları: sadece yeni öğelere; yeniden çizimde animasyon kaldığı yerden sürer
+const seenRow=new Set(),rowAt=new Map();let seenMsg=new Set(),msgAt=new Map(),msgPainted=false;
+const animOf=(M,k,dur)=>{const st=M.get(k);if(st===undefined)return["",""];const dl=st-Date.now();if(dl<-dur){M.delete(k);return["",""]}return[" a",` style="--d:${Math.round(dl)}ms"`]};
+const hidden=new Set(JSON.parse(store.get("hid")||"[]"));
+const delivered={},readSent={};
+const U={};
+let blocked=new Set(),blockList=[],grpDoc=null,pubWeek=0,sheetKind="";
+const stState=new Map(),stAt=new Map(),badgeAt=new Map(),badgeVal=new Map(),unrd=new Map();let typShown=false,openedAt=0;
+// ---- ses (WebAudio ile üretilir, dosya gerekmez); ilk dokunuştan sonra çalar
+let AC=null,lastSnd=0;
+const unlock=()=>{try{if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();if(AC.state==="suspended")AC.resume()}catch(e){}};
+["pointerdown","keydown","touchstart"].forEach(ev=>addEventListener(ev,unlock,{passive:true}));
+function tone(f,t0,d,v){const T=AC.currentTime+t0,o=AC.createOscillator(),g=AC.createGain();o.type="sine";o.frequency.setValueAtTime(f,T);g.gain.setValueAtTime(.0001,T);g.gain.exponentialRampToValueAtTime(v,T+.015);g.gain.exponentialRampToValueAtTime(.0001,T+d);o.connect(g);g.connect(AC.destination);o.start(T);o.stop(T+d+.05)}
+function sound(k){try{if(!AC||AC.state!=="running")return;const n=Date.now();if(n-lastSnd<120)return;lastSnd=n;if(k==="in"){tone(880,0,.2,.12);tone(1318.5,.09,.3,.1)}else{tone(520,0,.09,.05);tone(780,.05,.12,.04)}}catch(e){}}
+const myName=()=>((me.displayName)||(me.email||"").split("@")[0]||"?").trim();
+const meInfo=()=>({uid:me.uid,name:myName(),email:(me.email||"").toLowerCase()});
+const list=()=>cur&&cur.pub?pubRows:rows;
+const find=id=>list().find(r=>r.id===id);
+// One Chat haftalık: her hafta (pazartesi 00:00, UTC+3) yeni bir koleksiyon; eski haftalar görünmez
+const WK=604800000,WOFF=334800000;
+const weekId=()=>Math.floor((Date.now()-WOFF)/WK);
+const pubCol=()=>collection(db,"onechat","w"+weekId(),"m");
+const expAt=()=>Timestamp.fromMillis((weekId()+1)*WK+WOFF+3*864e5);
+const msgRef=id=>cur.pub?doc(db,"onechat","w"+weekId(),"m",id):cur.group?doc(db,"groups",cur.id,"messages",id):doc(db,"chats",cur.id,"messages",id);
+
+function toast(s){const e=$("toast");e.textContent=s;e.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>e.hidden=true,2400)}
+const stop=k=>{U[k]&&U[k]();U[k]=null};
+
+// ---- varlık (çevrimiçi / son görülme)
+async function ping(on){
+  if(!me)return;
+  try{await setDoc(doc(db,"users",me.uid),{name:myName(),email:(me.email||"").toLowerCase(),online:on,lastSeen:serverTimestamp()},{merge:true})}catch(e){}
+}
+
+// ---- sohbet listesi
+function pubUnread(){return Math.min(99,pubRows.filter(r=>r.from!==me.uid&&!r.pending&&!r.deleted&&ms(r.at)>pubReadAt).length)}
+function renderList(){
+  const q=$("q").value.trim().toLowerCase();
+  let h="";
+  const pl=pubRows.length?pubRows[pubRows.length-1]:null,pu=pubUnread();
+  let ai=0;
+  const bA=(k,n)=>{const p=badgeVal.get(k);if(p!==undefined&&p!==n)badgeAt.set(k,Date.now());badgeVal.set(k,n);return Date.now()-(badgeAt.get(k)||0)<500?" bump":""};
+  const rA=k=>{if(!seenRow.has(k)){seenRow.add(k);rowAt.set(k,Date.now()+120+Math.min(ai++,12)*55)}return animOf(rowAt,k,750)};
+  if(!q||"one chat".includes(q)||(pl&&(pl.text||"").toLowerCase().includes(q))){
+    const pv=pl?(pl.deleted?t("deleted"):(pl.from===me.uid?t("you"):(pl.name||""))+": "+pl.text):t("pub");
+    const[c0,s0]=rA("pub");
+    h+=`<button class="row${cur&&cur.pub?" on":""}${pu?" unr":""}${c0}"${s0} data-k="pub"><div class="av pubav">${PEOPLE}</div><div class="rc"><div class="r1"><b>One Chat</b><time>${pl&&pl.at?listTime(ms(pl.at)):""}</time></div><div class="r2"><span>${esc(pv)}</span>${pu?`<i class="bd${bA("pub",pu)}">${pu}</i>`:""}</div></div></button>`;
+  }
+  const nameOf=c=>c.group?(c.name||""):((c.peer&&(c.peer.name||c.peer.email))||"");
+  const items=chats.filter(c=>!q||nameOf(c).toLowerCase().includes(q)||(c.peer&&(c.peer.email||"").toLowerCase().includes(q))||(c.last&&(c.last.text||"").toLowerCase().includes(q)));
+  items.forEach(c=>{
+    const p=c.peer||{},l=c.last,u=c.unread||0;
+    const[c1,s1]=rA(c.id);
+    const av=c.group?`<div class="av" style="background:${avColor(c.id)}">${PEOPLE}</div>`:`<div class="av" style="background:${avColor(p.email||p.name)}">${initial(p.name||p.email)}</div>`;
+    const pv=l?((c.group?(l.from===me.uid?t("you")+": ":(l.name?l.name+": ":"")):"")+l.text):"";
+    h+=`<button class="row${cur&&cur.id===c.id?" on":""}${u>0?" unr":""}${c1}"${s1} data-id="${esc(c.id)}">${av}<div class="rc"><div class="r1"><b>${esc(nameOf(c))}</b><time>${l&&l.at?listTime(ms(l.at)):""}</time></div><div class="r2"><span>${esc(pv)}</span>${u>0?`<i class="bd${bA(c.id,Math.min(u,99))}">${Math.min(u,99)}</i>`:""}</div></div></button>`;
+  });
+  if(EM.test(q)&&!chats.some(c=>c.peer&&(c.peer.email||"").toLowerCase()===q)){
+    const[c2,s2]=rA("start:"+q);
+    h+=`<button class="row${c2}"${s2} data-start="${esc(q)}"><div class="av pubav"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></div><div class="rc"><div class="r1"><b>${esc(t("start"))}</b></div><div class="r2"><span>${esc(q)}</span></div></div></button>`;
+  }else if(!items.length&&!q){h+=`<div class="empty">${esc(t("empty"))}</div>`}
+  $("list").innerHTML=h;
+  const n=chats.reduce((a,c)=>a+(c.unread||0),0)+pu;
+  document.title=(n?`(${n}) `:"")+"One M";
+}
+
+// ---- iletişim: kişi başlatma
+async function startChat(email){
+  email=email.trim().toLowerCase();
+  if(!EM.test(email))return toast(t("badEm"));
+  if(email===(me.email||"").toLowerCase())return toast(t("self"));
+  const ex=chats.find(c=>c.peer&&(c.peer.email||"").toLowerCase()===email);
+  if(ex){$("q").value="";renderList();return openChat(ex)}
+  try{
+    const s=await getDoc(doc(db,"emails",email));
+    if(!s.exists())return toast(t("nf"));
+    const o=s.data(),id=[me.uid,o.uid].sort().join("_"),peer={uid:o.uid,name:o.name||email,email};
+    await setDoc(doc(db,"users",me.uid,"chats",id),{peer,updated:serverTimestamp(),unread:0},{merge:true});
+    $("q").value="";renderList();openChat({id,peer});
+  }catch(e){toast(t("err"))}
+}
+
+// ---- sohbet açma / kapama
+function showConv(){$("ph").hidden=true;$("conv").hidden=false;$("app").classList.add("open");if(!(history.state&&history.state.chat))history.pushState({chat:1},"")}
+function setHead(){
+  const a=$("hav");
+  if(cur.pub){a.className="av pubav";a.style.background="";a.innerHTML=PEOPLE;$("hnm").textContent="One Chat"}
+  else if(cur.group){a.className="av";a.style.background=avColor(cur.id);a.innerHTML=PEOPLE;$("hnm").textContent=cur.name||""}
+  else{a.className="av";a.style.background=avColor(cur.peer.email||cur.peer.name);a.textContent=(cur.peer.name||cur.peer.email||"?").trim()[0].toUpperCase();$("hnm").textContent=cur.peer.name||cur.peer.email}
+}
+function resetConv(){
+  stop("msgs");stop("meta");stop("peer");stop("grp");grpDoc=null;
+  rows=[];meta={};peerDoc=null;replyTo=null;stick=true;newCnt=0;prevLen=0;seenMsg=new Set();msgAt=new Map();msgPainted=false;stState.clear();stAt.clear();typShown=false;openedAt=Date.now();
+  $("rbar").hidden=true;$("ta").value="";autosize();
+}
+function openChat(c){
+  resetConv();
+  cur={id:c.id,peer:c.peer,pub:false};
+  setHead();updateStatus();showConv();renderMsgs();syncComp();renderList();
+  const id=c.id,pid=c.peer.uid;
+  U.msgs=onSnapshot(query(collection(db,"chats",id,"messages"),orderBy("at","desc"),limit(150)),s=>{
+    rows=s.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"}),pending:d.metadata.hasPendingWrites})).reverse();
+    renderMsgs();markRead();
+  },()=>toast(t("err")));
+  U.meta=onSnapshot(doc(db,"chats",id,"meta","state"),s=>{meta=s.exists()?s.data():{};renderMsgs();updateStatus()},()=>{});
+  U.peer=onSnapshot(doc(db,"users",pid),s=>{peerDoc=s.exists()?s.data():null;updateStatus()},()=>{});
+  if(fine())$("ta").focus({preventScroll:true});
+}
+function openPub(){
+  resetConv();
+  cur={id:"pub",pub:true,peer:{name:"One Chat"}};
+  setHead();updateStatus();showConv();renderMsgs();markPubRead();syncComp();renderList();
+}
+function closeUI(){
+  resetConv();cur=null;
+  $("conv").hidden=true;$("ph").hidden=false;$("app").classList.remove("open");syncComp();renderList();
+}
+function goBack(){if(history.state&&history.state.chat)history.back();else closeUI()}
+addEventListener("popstate",()=>{if(cur)closeUI()});
+
+function updateStatus(){
+  if(!cur)return;
+  let s="";
+  if(cur.pub)s=t("pub")+" · "+t("weekly");
+  else if(cur.group)s=grpDoc?Object.values(grpDoc.memberInfo||{}).map(u=>u.name||u.email).join(", "):"";
+  else if(peerDoc){
+    const ls=ms(peerDoc.lastSeen);
+    if(peerDoc.online&&Date.now()-ls<100000)s=t("online");
+    else if(ls)s=t("seen")+" "+(isToday(ls)?hhmm(ls):isYest(ls)?t("yest")+" "+hhmm(ls):dateShort(ls));
+  }
+  const el=$("hst");
+  if(el.textContent!==s){el.textContent=s;el.classList.remove("sw");void el.offsetWidth;el.classList.add("sw")}
+  syncTyping();
+}
+// ---- yazıyor göstergesi: sohbette üç noktalı baloncuk
+const typHtml=an=>`<div class="m typ${an?" in":""}" id="typ"><span></span><span></span><span></span></div>`;
+function isTyping(){if(!cur||cur.pub||cur.group)return false;const tp=meta["t_"+cur.peer.uid];return !!tp&&Date.now()-tp<4500}
+function syncTyping(){
+  if(!cur)return;
+  const box=$("msgs"),el=$("typ"),on=isTyping();
+  if(on&&!el){
+    const near=box.scrollHeight-box.scrollTop-box.clientHeight<90;
+    box.insertAdjacentHTML("beforeend",typHtml(true));typShown=true;
+    if(near)box.scrollTo({top:box.scrollHeight,behavior:"smooth"});
+    updateTob();
+  }else if(!on&&el&&!el.classList.contains("out")){
+    typShown=false;el.classList.add("out");setTimeout(()=>el.remove(),220);
+  }
+}
+
+// ---- okundu / iletildi
+function markRead(){
+  if(!cur||cur.pub||document.hidden)return;
+  if(cur.group){const g=chats.find(c=>c.id===cur.id);if(g&&g.unread>0)setDoc(doc(db,"users",me.uid,"chats",cur.id),{unread:0},{merge:true}).catch(()=>{});return}
+  const id=cur.id,pid=cur.peer.uid;
+  let last=0;rows.forEach(r=>{if(r.from===pid&&!r.pending)last=Math.max(last,ms(r.at))});
+  const mine=chats.find(c=>c.id===id);
+  if(last>(readSent[id]||0)||(mine&&mine.unread>0)){
+    readSent[id]=last||1;
+    setDoc(doc(db,"chats",id,"meta","state"),{["r_"+me.uid]:serverTimestamp()},{merge:true}).catch(()=>{});
+    setDoc(doc(db,"users",me.uid,"chats",id),{unread:0},{merge:true}).catch(()=>{});
+  }
+}
+function markPubRead(){
+  if(!cur||!cur.pub||document.hidden)return;
+  let m=pubReadAt;pubRows.forEach(r=>{if(!r.pending)m=Math.max(m,ms(r.at))});
+  if(m!==pubReadAt){pubReadAt=m;store.set("pubRead",String(m));renderList()}
+}
+function markDelivered(){
+  chats.forEach(c=>{
+    const l=c.last;if(c.group||!l||l.from===me.uid||!l.at)return;
+    const m=ms(l.at);
+    if(m>(delivered[c.id]||0)){delivered[c.id]=m;setDoc(doc(db,"chats",c.id,"meta","state"),{["d_"+me.uid]:serverTimestamp()},{merge:true}).catch(()=>{})}
+  });
+}
+function ticks(r,m){
+  const pid=cur.peer.uid,st=r.pending?"p":ms(meta["r_"+pid])>=m?"r":ms(meta["d_"+pid])>=m?"d":"s";
+  const pv=stState.get(r.id);if(pv!==undefined&&pv!==st)stAt.set(r.id,Date.now());stState.set(r.id,st);
+  const pop=Date.now()-(stAt.get(r.id)||0)<500&&Date.now()-openedAt>1500?" pop":"";
+  if(st==="r"){const p=cur.peer;return `<i class="st r${pop}" style="background:${avColor(p.email||p.name)}">${initial(p.name||p.email)}</i>`}
+  return `<i class="st ${st}${pop}"></i>`;
+}
+
+// ---- mesaj çizimi
+function bubble(r,m){
+  const mine=r.from===me.uid;
+  let inner="";
+  if(r.deleted)inner=`<i class="dl">🚫 ${esc(t("deleted"))}</i>`;
+  else{
+    if((cur.pub||cur.group)&&!mine)inner+=`<b class="who" style="color:${avColor(r.from)}">${esc(r.name||"")}</b>`;
+    if(r.replyTo)inner+=`<div class="rq" data-go="${esc(r.replyTo.id)}"><b>${esc(r.replyTo.name)}</b><span>${esc(r.replyTo.text)}</span></div>`;
+    if(r.type==="contact"&&r.contact){const k=r.contact;inner+=`<div class="cc"><div class="av" style="background:${avColor(k.email||k.name)}">${initial(k.name||k.email)}</div><div><b>${esc(k.name||k.email)}</b><span>${esc(k.email||"")}</span></div></div><button class="ccb" type="button" data-start="${esc(k.email||"")}">${esc(t("start"))}</button>`}else inner+=esc(r.text);
+  }
+  const[ca,sa]=animOf(msgAt,r.id,520);
+  return `<div class="m${mine?" me":""}${ca}"${sa} data-id="${esc(r.id)}">${inner}<span class="mt">${hhmm(m)}${mine&&!cur.pub&&!cur.group?ticks(r,m):""}</span></div>`;
+}
+function renderMsgs(){
+  if(!cur)return;
+  const box=$("msgs"),st=box.scrollTop,near=box.scrollHeight-st-box.clientHeight<90;
+  const l=list().filter(r=>!hidden.has(r.id));
+  let inc=false;
+  if(l.length){
+    const now=Date.now();
+    if(!msgPainted){l.slice(-8).forEach((r,i)=>msgAt.set(r.id,now+i*30));msgPainted=true}
+    else l.forEach(r=>{if(!seenMsg.has(r.id)){msgAt.set(r.id,now);if(r.from!==me.uid&&!r.pending&&!r.deleted){inc=true;if(!cur.pub&&!cur.group)meta["t_"+cur.peer.uid]=0}}});
+    l.forEach(r=>seenMsg.add(r.id));
+  }
+  let h="",d="";
+  l.forEach(r=>{
+    const m=r.at?ms(r.at):Date.now(),k=day0(m);
+    if(k!==d){h+=`<div class="day">${esc(dayLabel(m))}</div>`;d=k}
+    h+=bubble(r,m);
+  });
+  box.innerHTML=h||`<div class="empty">${esc(t("nomsg"))}</div>`;
+  if(isTyping()){box.insertAdjacentHTML("beforeend",typHtml(!typShown));typShown=true}else typShown=false;
+  if(inc)sound("in");
+  const last=l[l.length-1];
+  if(stick||near){box.scrollTop=box.scrollHeight;newCnt=0}
+  else{box.scrollTop=st;if(l.length>prevLen&&last&&last.from!==me.uid)newCnt+=l.length-prevLen}
+  prevLen=l.length;stick=false;updateTob();
+}
+function updateTob(){
+  const b=$("msgs"),near=b.scrollHeight-b.scrollTop-b.clientHeight<90;
+  if(near)newCnt=0;
+  $("tob").hidden=near;$("tobN").textContent=newCnt||"";$("tobN").hidden=!newCnt;
+}
+$("msgs").addEventListener("scroll",updateTob,{passive:true});
+$("tob").onclick=()=>{const b=$("msgs");b.scrollTo({top:b.scrollHeight,behavior:"smooth"})};
+
+// ---- yazma kutusu
+const ta=$("ta");
+function autosize(){ta.style.height="auto";ta.style.height=Math.min(Math.max(ta.scrollHeight,44),140)+"px"}
+let lastTyping=0;
+ta.addEventListener("input",()=>{
+  autosize();
+  if(cur&&!cur.pub&&!cur.group&&!isBlockedPeer()&&Date.now()-lastTyping>2500){
+    lastTyping=Date.now();
+    setDoc(doc(db,"chats",cur.id,"meta","state"),{["t_"+me.uid]:Date.now()},{merge:true}).catch(()=>{});
+  }
+});
+const fine=()=>{try{return matchMedia("(pointer:fine)").matches}catch(e){return true}};
+ta.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey&&fine()){e.preventDefault();$("comp").requestSubmit()}});
+const sdBtn=document.querySelector(".sd");
+["pointerdown","mousedown"].forEach(ev=>sdBtn.addEventListener(ev,e=>e.preventDefault()));
+sdBtn.addEventListener("animationend",()=>sdBtn.classList.remove("fly"));
+function flySend(){sdBtn.classList.remove("fly");void sdBtn.offsetWidth;sdBtn.classList.add("fly")}
+function startReply(id){
+  const r=find(id);if(!r||r.deleted)return;
+  replyTo={id:r.id,name:r.from===me.uid?t("you"):(r.name||(cur.peer&&cur.peer.name)||""),text:String(r.text||"").slice(0,120)};
+  $("rbar").innerHTML=`<div class="rq"><b>${esc(replyTo.name)}</b><span>${esc(replyTo.text)}</span></div><button class="ib" id="rx" type="button" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>`;
+  $("rbar").hidden=false;$("rx").onclick=clearReply;ta.focus();
+}
+function clearReply(){replyTo=null;$("rbar").hidden=true}
+// ---- mesaj menüsü (uzun bas / sağ tık), kaydırarak yanıtla
+function showMenu(id,x,y){
+  const r=find(id);if(!r)return;
+  const mine=r.from===me.uid;
+  let h="";
+  if(!r.deleted)h+=`<button data-a="reply">${esc(t("reply"))}</button><button data-a="copy">${esc(t("copy"))}</button>`;
+  h+=`<button data-a="me">${esc(t("delMe"))}</button>`;
+  if(mine&&!r.deleted&&!r.pending)h+=`<button data-a="all">${esc(t("delAll"))}</button>`;
+  const m=$("cm");m.innerHTML=h;m.dataset.id=id;m.hidden=false;
+  const w=m.offsetWidth,hh=m.offsetHeight;
+  m.style.left=Math.max(8,Math.min(x,innerWidth-w-8))+"px";
+  m.style.top=Math.max(8,Math.min(y,innerHeight-hh-8))+"px";
+  navigator.vibrate&&navigator.vibrate(8);
+}
+const hideMenu=()=>{$("cm").hidden=true};
+$("cm").onclick=async e=>{
+  const b=e.target.closest("button");if(!b)return;
+  const id=$("cm").dataset.id,r=find(id);hideMenu();if(!r)return;
+  if(b.dataset.a==="reply")startReply(id);
+  else if(b.dataset.a==="copy"){try{await navigator.clipboard.writeText(r.text);toast(t("copied"))}catch(err){}}
+  else if(b.dataset.a==="me"){hidden.add(id);store.set("hid",JSON.stringify([...hidden]));renderMsgs()}
+  else if(b.dataset.a==="all"){
+    try{await updateDoc(msgRef(id),{deleted:true,text:""})}catch(err){toast(t("err"))}
+  }
+};
+let lp=null,px=0,py=0;
+const msgs=$("msgs");
+msgs.addEventListener("pointerdown",e=>{
+  const m=e.target.closest(".m");if(!m||e.button>0)return;
+  px=e.clientX;py=e.clientY;clearTimeout(lp);m.classList.add("pr");
+  lp=setTimeout(()=>{lp=null;showMenu(m.dataset.id,px,py)},450);
+});
+["pointerup","pointercancel","pointerleave"].forEach(ev=>msgs.addEventListener(ev,()=>{clearTimeout(lp);msgs.querySelectorAll(".pr").forEach(x=>x.classList.remove("pr"))}));
+msgs.addEventListener("pointermove",e=>{if(lp&&(Math.abs(e.clientX-px)>8||Math.abs(e.clientY-py)>8))clearTimeout(lp)});
+msgs.addEventListener("contextmenu",e=>{const m=e.target.closest(".m");if(m){e.preventDefault();showMenu(m.dataset.id,e.clientX,e.clientY)}});
+msgs.addEventListener("click",e=>{
+  const q=e.target.closest(".rq");if(!q||!q.dataset.go)return;
+  const el=msgs.querySelector(`.m[data-id="${CSS.escape(q.dataset.go)}"]`);
+  if(el){el.scrollIntoView({block:"center",behavior:"smooth"});el.classList.add("fl");setTimeout(()=>el.classList.remove("fl"),1200)}
+});
+let sx=0,sy=0,sw=null;
+msgs.addEventListener("touchstart",e=>{const m=e.target.closest(".m");if(!m||e.touches.length>1)return;sw=m;sx=e.touches[0].clientX;sy=e.touches[0].clientY},{passive:true});
+msgs.addEventListener("touchmove",e=>{
+  if(!sw)return;
+  const dx=e.touches[0].clientX-sx,dy=e.touches[0].clientY-sy;
+  if(Math.abs(dy)>Math.abs(dx)&&Math.abs(dy)>10){sw.style.transform="";sw=null;return}
+  const rtl=document.documentElement.dir==="rtl",d=rtl?-dx:dx;
+  if(d>6){clearTimeout(lp);const v=Math.min(d,72);sw.dataset.sw=v;sw.style.setProperty("--p",Math.min(v/56,1));sw.style.transform=`translateX(${rtl?-v:v}px)`}
+},{passive:true});
+msgs.addEventListener("touchend",()=>{
+  if(!sw)return;
+  const m=sw,v=+m.dataset.sw||0;sw=null;
+  m.style.transition="transform .2s";m.style.transform="";m.dataset.sw="";m.style.setProperty("--p",0);
+  setTimeout(()=>{m.style.transition=""},220);
+  if(v>=56){startReply(m.dataset.id);navigator.vibrate&&navigator.vibrate(10)}
+});
+addEventListener("click",e=>{if(!e.target.closest("#cm"))hideMenu();if(!e.target.closest("#menu")&&!e.target.closest("#bMenu"))$("menu").hidden=true});
+msgs.addEventListener("scroll",hideMenu,{passive:true});
+
+// ---- liste ve üst menü olayları
+$("list").onclick=e=>{
+  const b=e.target.closest(".row");if(!b)return;
+  if(b.dataset.start)return startChat(b.dataset.start);
+  if(b.dataset.k==="pub")return openPub();
+  const c=chats.find(x=>x.id===b.dataset.id);if(c)c.group?openGroup(c):openChat(c);
+};
+$("q").addEventListener("input",renderList);
+$("q").addEventListener("keydown",e=>{if(e.key==="Enter"&&EM.test($("q").value.trim())){e.preventDefault();startChat($("q").value)}});
+$("bNew").onclick=()=>{$("q").focus();$("q").select()};
+$("bBack").onclick=goBack;
+$("bTheme").onclick=()=>{
+  const x=document.documentElement.dataset.theme==="dark"?"light":"dark";store.set("theme",x);
+  const go=()=>setTheme(x);
+  if(document.startViewTransition&&!matchMedia("(prefers-reduced-motion:reduce)").matches)document.startViewTransition(go);else go();
+};
+$("bMenu").onclick=()=>{$("menu").hidden=!$("menu").hidden};
+$("mAcct").onclick=()=>{location.href="index.html"};
+$("mOut").onclick=()=>{ping(false).finally(()=>signOut(auth).finally(()=>location.replace("index.html")))};
+
+// ---- gönderim: birebir, grup ve One Chat tek yerden
+const target=()=>cur.pub?{kind:"pub"}:cur.group?{kind:"grp",id:cur.id}:{kind:"dm",id:cur.id,peer:cur.peer};
+async function groupOf(id){if(grpDoc&&cur&&cur.id===id)return grpDoc;const s=await getDoc(doc(db,"groups",id));return s.data()}
+async function sendTo(tg,extra,tx){
+  const base={from:me.uid,text:tx,at:serverTimestamp(),...extra};
+  if(tg.kind==="pub"){await addDoc(pubCol(),{...base,name:myName().slice(0,60),exp:expAt()});return}
+  const lastOf=()=>({text:tx.slice(0,200),from:me.uid,name:myName().slice(0,60),at:serverTimestamp()});
+  const b=writeBatch(db);
+  if(tg.kind==="dm"){
+    b.set(doc(collection(db,"chats",tg.id,"messages")),base);
+    b.set(doc(db,"users",me.uid,"chats",tg.id),{peer:tg.peer,last:lastOf(),updated:serverTimestamp(),unread:0},{merge:true});
+    b.set(doc(db,"users",tg.peer.uid,"chats",tg.id),{peer:meInfo(),last:lastOf(),updated:serverTimestamp(),unread:increment(1)},{merge:true});
+  }else{
+    const g=await groupOf(tg.id);
+    b.set(doc(collection(db,"groups",tg.id,"messages")),{...base,name:myName().slice(0,60)});
+    (g.members||[]).forEach(u=>b.set(doc(db,"users",u,"chats",tg.id),{group:true,name:g.name,last:lastOf(),updated:serverTimestamp(),unread:u===me.uid?0:increment(1)},{merge:true}));
+  }
+  await b.commit();
+}
+$("comp").onsubmit=async e=>{
+  e.preventDefault();
+  const tx=ta.value.trim();if(!tx||!cur||isBlockedPeer())return;
+  const rep=replyTo?{id:replyTo.id,name:replyTo.name,text:replyTo.text}:null;
+  ta.value="";autosize();clearReply();stick=true;
+  ta.focus({preventScroll:true});flySend();sound("out");
+  if(!cur.pub&&!cur.group){lastTyping=0;setDoc(doc(db,"chats",cur.id,"meta","state"),{["t_"+me.uid]:0},{merge:true}).catch(()=>{})}
+  try{await sendTo(target(),rep?{replyTo:rep}:{},tx)}
+  catch(err){toast(t(cur&&!cur.pub&&!cur.group?"sendFail":"err"))}
+};
+
+// ---- engelleme
+const isBlockedPeer=()=>!!(cur&&!cur.pub&&!cur.group&&blocked.has(cur.peer.uid));
+function syncComp(){
+  const bl=isBlockedPeer();
+  $("comp").hidden=bl;$("blkbar").hidden=!bl;$("bAtt").hidden=!cur||!!cur.pub;
+  if(bl){$("blkTxt").textContent=t("youBlocked");$("blkBtn").textContent=t("unblock")}
+}
+$("blkBtn").onclick=()=>{if(isBlockedPeer())deleteDoc(doc(db,"users",me.uid,"blocks",cur.peer.uid)).catch(()=>toast(t("err")))};
+
+// ---- pencere (profil, grup bilgisi, yeni grup, paylaşma, engelliler)
+const IC={
+  share:'<svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4"/></svg>',
+  block:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg>',
+  out:'<svg viewBox="0 0 24 24"><path d="M9 4H5v16h4M16 8l4 4-4 4M20 12H9"/></svg>'
+};
+function openSheet(kind,title,html){sheetKind=kind;$("sht").textContent=title;$("shc").innerHTML=html;$("shc").onclick=null;$("sheet").hidden=false}
+function closeSheet(){$("sheet").hidden=true;sheetKind=""}
+$("shx").onclick=closeSheet;
+$("sheet").addEventListener("click",e=>{if(e.target.id==="sheet")closeSheet()});
+addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("sheet").hidden)closeSheet()});
+const peerAv=(p,c)=>`<div class="av${c?" "+c:""}" style="background:${avColor(p.email||p.name)}">${initial(p.name||p.email)}</div>`;
+async function userByEmail(email){
+  email=(email||"").trim().toLowerCase();
+  if(!EM.test(email)){toast(t("badEm"));return null}
+  if(email===(me.email||"").toLowerCase()){toast(t("self"));return null}
+  const s=await getDoc(doc(db,"emails",email));
+  if(!s.exists()){toast(t("nf"));return null}
+  const o=s.data();return {uid:o.uid,name:o.name||email,email};
+}
+async function dmWith(email){
+  const u=await userByEmail(email);if(!u)return null;
+  const id=[me.uid,u.uid].sort().join("_");
+  await setDoc(doc(db,"users",me.uid,"chats",id),{peer:u,updated:serverTimestamp(),unread:0},{merge:true});
+  return {kind:"dm",id,peer:u};
+}
+
+// kişi profili: Paylaş / Engelle
+function openProfile(p){
+  const bl=blocked.has(p.uid);
+  openSheet("prof",p.name||p.email,`<div class="pf">${peerAv(p,"big")}<b>${esc(p.name||p.email)}</b><span>${esc(p.email||"")}</span></div><button class="act" data-a="share">${IC.share}${esc(t("share"))}</button><button class="act dng" data-a="${bl?"unb":"blk"}">${IC.block}${esc(t(bl?"unblock":"block"))}</button>`);
+  $("shc").onclick=async e=>{
+    const b=e.target.closest("[data-a]");if(!b)return;
+    try{
+      if(b.dataset.a==="share"){closeSheet();openShare("to",p)}
+      else if(b.dataset.a==="blk"){await setDoc(doc(db,"users",me.uid,"blocks",p.uid),{uid:p.uid,name:p.name||"",email:p.email||"",at:serverTimestamp()});closeSheet()}
+      else{await deleteDoc(doc(db,"users",me.uid,"blocks",p.uid));closeSheet()}
+    }catch(err){toast(t("err"))}
+  };
+}
+
+// kişi paylaşma: "to" = bu kişi hangi sohbete gönderilsin, "who" = açık sohbete hangi kişi gönderilsin
+function openShare(mode,contact){
+  const head=mode==="to"?`<div class="chip big">${esc(contact.name||contact.email)}</div>`:"";
+  openSheet("share",t(mode==="to"?"shareTo":"shareContact"),`${head}<input class="fi full" id="shQ" placeholder="${esc(t("search"))}" autocomplete="off"><div id="shL"></div>`);
+  const pool=mode==="to"?chats:chats.filter(c=>!c.group);
+  const nm=c=>c.group?(c.name||""):((c.peer&&(c.peer.name||c.peer.email))||"");
+  const draw=()=>{
+    const q=$("shQ").value.trim().toLowerCase();let h="";
+    pool.filter(c=>!q||nm(c).toLowerCase().includes(q)||(c.peer&&(c.peer.email||"").toLowerCase().includes(q))).forEach(c=>{
+      h+=`<button class="act" data-c="${esc(c.id)}">${c.group?`<div class="av sm" style="background:${avColor(c.id)}">${PEOPLE}</div>`:peerAv(c.peer,"sm")}<div class="rc"><b>${esc(nm(c))}</b><span>${esc(c.group?"":c.peer.email||"")}</span></div></button>`;
+    });
+    if(EM.test(q)&&!pool.some(c=>c.peer&&(c.peer.email||"").toLowerCase()===q))h+=`<button class="act" data-e="${esc(q)}"><div class="av sm pubav">@</div><div class="rc"><b>${esc(q)}</b></div></button>`;
+    $("shL").innerHTML=h;
+  };
+  draw();$("shQ").oninput=draw;
+  $("shc").onclick=async e=>{
+    const b=e.target.closest(".act");if(!b)return;
+    try{
+      let who=null,tg=null;
+      const c=b.dataset.c?chats.find(x=>x.id===b.dataset.c):null;
+      if(mode==="to"){
+        who=contact;
+        tg=c?(c.group?{kind:"grp",id:c.id}:{kind:"dm",id:c.id,peer:c.peer}):await dmWith(b.dataset.e);
+      }else{
+        tg=target();
+        who=c?c.peer:await userByEmail(b.dataset.e);
+      }
+      if(!who||!tg)return;
+      await sendTo(tg,{type:"contact",contact:{uid:who.uid,name:who.name||who.email,email:who.email}},"👤 "+(who.name||who.email));
+      closeSheet();toast(t("shared"));
+    }catch(err){toast(t("sendFail"))}
+  };
+}
+$("bAtt").onclick=()=>openShare("who");
+msgs.addEventListener("click",e=>{const c=e.target.closest(".ccb");if(c&&c.dataset.start)startChat(c.dataset.start)});
+
+// ---- gruplar
+function openGroup(c){
+  resetConv();
+  cur={id:c.id,group:true,name:c.name};
+  setHead();updateStatus();showConv();renderMsgs();syncComp();renderList();
+  U.msgs=onSnapshot(query(collection(db,"groups",c.id,"messages"),orderBy("at","desc"),limit(150)),s=>{
+    rows=s.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"}),pending:d.metadata.hasPendingWrites})).reverse();
+    renderMsgs();markRead();
+  },()=>toast(t("err")));
+  U.grp=onSnapshot(doc(db,"groups",c.id),s=>{
+    if(!cur||cur.id!==c.id)return;
+    const g=s.exists()?s.data():null;
+    if(!g||!(g.members||[]).includes(me.uid)){deleteDoc(doc(db,"users",me.uid,"chats",c.id)).catch(()=>{});closeSheet();goBack();return}
+    grpDoc=g;cur.name=g.name;setHead();updateStatus();
+    if(sheetKind==="grp")openGroupInfo();
+  },()=>{});
+}
+function openGroupInfo(){
+  if(!grpDoc||!cur||!cur.group)return;
+  const own=grpDoc.owner===me.uid,mem=Object.entries(grpDoc.memberInfo||{});
+  const rows=mem.map(([uid,u])=>`<div class="mr" data-u="${esc(uid)}">${peerAv(u,"sm")}<div class="rc"><b>${esc(u.name||u.email)}${uid===me.uid?" ("+esc(t("you"))+")":""}</b><span>${esc(u.email||"")}</span></div>${uid===grpDoc.owner?`<i class="tag">${esc(t("owner"))}</i>`:""}${own&&uid!==me.uid?`<button class="mini" data-rm="${esc(uid)}">${esc(t("remove"))}</button>`:""}</div>`).join("");
+  openSheet("grp",grpDoc.name,`<div class="pf"><div class="av big" style="background:${avColor(cur.id)}">${PEOPLE}</div><b>${esc(grpDoc.name)}</b></div>${own?`<div class="field"><input class="fi" id="gAdd" type="email" placeholder="${esc(t("memEmail"))}" autocomplete="off"><button class="pb" id="gAddB" type="button">+</button></div>`:""}<div class="sec2">${esc(t("members"))} (${mem.length})</div>${rows}<button class="act dng" data-a="leave">${IC.out}${esc(t("leave"))}</button>`);
+  const ga=$("gAdd");if(ga)ga.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();addMember(ga.value)}});
+  $("shc").onclick=async e=>{
+    const rm=e.target.closest("[data-rm]");
+    if(rm){try{await removeMember(rm.dataset.rm)}catch(err){toast(t("err"))}return}
+    if(e.target.closest("#gAddB")){addMember($("gAdd").value);return}
+    const a=e.target.closest("[data-a]");
+    if(a&&a.dataset.a==="leave"){leaveGroup();return}
+    const r=e.target.closest(".mr");
+    if(r&&r.dataset.u!==me.uid){const u=(grpDoc.memberInfo||{})[r.dataset.u];if(u)openProfile({uid:r.dataset.u,...u})}
+  };
+}
+async function addMember(email){
+  const mem=grpDoc.members||[];
+  if(mem.length>=15)return toast(t("grpMax"));
+  try{
+    const u=await userByEmail(email);if(!u)return;
+    if(mem.includes(u.uid))return toast(t("already"));
+    const b=writeBatch(db);
+    b.update(doc(db,"groups",cur.id),{members:arrayUnion(u.uid),["memberInfo."+u.uid]:{name:u.name,email:u.email}});
+    b.set(doc(db,"users",u.uid,"chats",cur.id),{group:true,name:grpDoc.name,updated:serverTimestamp(),unread:0},{merge:true});
+    await b.commit();toast(t("added"));
+  }catch(err){toast(t("err"))}
+}
+async function removeMember(uid){
+  const b=writeBatch(db);
+  b.update(doc(db,"groups",cur.id),{members:arrayRemove(uid),["memberInfo."+uid]:deleteField()});
+  b.delete(doc(db,"users",uid,"chats",cur.id));
+  await b.commit();
+}
+async function leaveGroup(){
+  const mem=grpDoc.members||[],upd={members:arrayRemove(me.uid),["memberInfo."+me.uid]:deleteField()};
+  if(grpDoc.owner===me.uid&&mem.length>1)upd.owner=mem.find(u=>u!==me.uid);
+  try{
+    const b=writeBatch(db);
+    b.update(doc(db,"groups",cur.id),upd);
+    b.delete(doc(db,"users",me.uid,"chats",cur.id));
+    await b.commit();closeSheet();goBack();
+  }catch(err){toast(t("err"))}
+}
+let ngMem=[],ngName="";
+function openNewGroup(){ngMem=[];ngName="";renderNewGroup()}
+function renderNewGroup(){
+  openSheet("ng",t("newGroup"),`<input class="fi full" id="ngName" maxlength="60" placeholder="${esc(t("grpName"))}" value="${esc(ngName)}"><div class="field"><input class="fi" id="ngEm" type="email" placeholder="${esc(t("memEmail"))}" autocomplete="off"><button class="pb" id="ngAdd" type="button">+</button></div><div class="chips">${ngMem.map((u,i)=>`<span class="chip">${esc(u.name||u.email)}<button type="button" data-x="${i}" aria-label="x">✕</button></span>`).join("")}</div><button class="pb wide" id="ngGo" type="button">${esc(t("create"))}</button>`);
+  const addOne=async()=>{
+    ngName=$("ngName").value;
+    const em=$("ngEm").value.trim().toLowerCase();if(!em)return;
+    if(ngMem.length>=14)return toast(t("grpMax"));
+    try{
+      const u=await userByEmail(em);if(!u)return;
+      if(ngMem.some(x=>x.uid===u.uid))return toast(t("already"));
+      ngMem.push(u);renderNewGroup();
+    }catch(err){toast(t("err"))}
+  };
+  $("ngEm").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();addOne()}});
+  $("shc").onclick=async e=>{
+    const x=e.target.closest("[data-x]");
+    if(x){ngName=$("ngName").value;ngMem.splice(+x.dataset.x,1);renderNewGroup();return}
+    if(e.target.closest("#ngAdd"))return addOne();
+    if(e.target.closest("#ngGo")){
+      ngName=$("ngName").value.trim();
+      if(!ngName)return $("ngName").focus();
+      if(!ngMem.length)return toast(t("grpMin"));
+      try{
+        const gid="g-"+doc(collection(db,"groups")).id,ids=[me.uid,...ngMem.map(u=>u.uid)];
+        const info={[me.uid]:{name:myName(),email:(me.email||"").toLowerCase()}};
+        ngMem.forEach(u=>{info[u.uid]={name:u.name||u.email,email:u.email}});
+        const b=writeBatch(db);
+        b.set(doc(db,"groups",gid),{name:ngName,owner:me.uid,members:ids,memberInfo:info,created:serverTimestamp()});
+        ids.forEach(u=>b.set(doc(db,"users",u,"chats",gid),{group:true,name:ngName,updated:serverTimestamp(),unread:0},{merge:true}));
+        await b.commit();
+        closeSheet();toast(t("groupMade"));openGroup({id:gid,name:ngName});
+      }catch(err){toast(t("err"))}
+    }
+  };
+}
+function openBlocked(){
+  openSheet("blk",t("blockedL"),blockList.length?blockList.map(u=>`<div class="mr" style="cursor:default">${peerAv(u,"sm")}<div class="rc"><b>${esc(u.name||u.email)}</b><span>${esc(u.email||"")}</span></div><button class="mini" style="color:var(--fg)" data-ub="${esc(u.uid)}">${esc(t("unblock"))}</button></div>`).join(""):`<div class="empty">${esc(t("noBlocked"))}</div>`);
+  $("shc").onclick=e=>{const b=e.target.closest("[data-ub]");if(b)deleteDoc(doc(db,"users",me.uid,"blocks",b.dataset.ub)).catch(()=>toast(t("err")))};
+}
+const headClick=()=>{if(!cur)return;if(cur.group)openGroupInfo();else if(!cur.pub)openProfile(cur.peer)};
+$("hav").onclick=headClick;document.querySelector(".ch .tt").onclick=headClick;
+$("mGroup").onclick=()=>{$("menu").hidden=true;openNewGroup()};
+$("mBlocked").onclick=()=>{$("menu").hidden=true;openBlocked()};
+
+// ---- başlatma
+function init(){
+  if(inited)return;inited=true;
+  if(me.email)setDoc(doc(db,"emails",me.email.toLowerCase()),{uid:me.uid,name:myName()},{merge:true}).catch(()=>{});
+  ping(true);
+  setInterval(()=>{if(!document.hidden)ping(true)},40000);
+  setInterval(updateStatus,1000);
+  setInterval(()=>{if(weekId()!==pubWeek)startPub()},30000);
+  document.addEventListener("visibilitychange",()=>{ping(!document.hidden);if(!document.hidden){markRead();markPubRead()}});
+  addEventListener("pagehide",()=>ping(false));
+  U.chats=onSnapshot(query(collection(db,"users",me.uid,"chats"),orderBy("updated","desc")),s=>{
+    chats=s.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"})}));
+    chats.forEach(c=>{const u=c.unread||0,pv=unrd.get(c.id);if(pv!==undefined&&u>pv&&(!cur||cur.id!==c.id||document.hidden)){sound("in");rowAt.set(c.id,Date.now())}unrd.set(c.id,u)});
+    renderList();markDelivered();markRead();
+  },()=>toast(t("err")));
+  startPub();
+  U.blocks=onSnapshot(collection(db,"users",me.uid,"blocks"),s=>{
+    blockList=s.docs.map(d=>d.data());blocked=new Set(blockList.map(b=>b.uid));
+    syncComp();if(sheetKind==="blk")openBlocked();
+  },()=>{});
+}
+function startPub(){
+  stop("pub");pubWeek=weekId();pubRows=[];
+  U.pub=onSnapshot(query(pubCol(),orderBy("at","desc"),limit(100)),s=>{
+    pubRows=s.docs.map(d=>({id:d.id,...d.data({serverTimestamps:"estimate"}),pending:d.metadata.hasPendingWrites})).reverse();
+    renderList();if(cur&&cur.pub){renderMsgs();markPubRead()}
+  },()=>toast(t("err")));
+  renderList();if(cur&&cur.pub)renderMsgs();
+}
+applyLang();setTheme(pickTheme());
+onAuthStateChanged(auth,u=>{
+  if(!u){location.replace("index.html");return}
+  me=u;init();renderList();
+});
+</script>
+</body>
+</html>
